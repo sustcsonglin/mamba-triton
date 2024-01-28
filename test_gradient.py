@@ -1,12 +1,13 @@
 
 import torch
 from ref import ref_selective_scan
-from triton_scan import triton_selective_scan
+from triton_parallel_scan import triton_selective_scan
+from triton_sequential_scan import triton_selective_scan_sequential
 
 if __name__ == '__main__':
     B = 2
-    T = 128
-    D = 1024
+    T = 16
+    D = 512
     K = 16
     dtype = torch.float32
     A = (-(torch.rand(D, K, dtype=dtype)).exp().cuda()).requires_grad_(True)
@@ -16,7 +17,9 @@ if __name__ == '__main__':
     C = torch.randn(B, T, K, dtype=dtype).cuda().requires_grad_(True)
     D2 = torch.randn(D, dtype=dtype).cuda().requires_grad_(True)
 
-    tri = triton_selective_scan(x, delta, A, B2, C, D2)
+    initial_state = torch.randn(B, D, K, dtype=dtype).cuda().requires_grad_(False)
+
+    tri, tri_final = triton_selective_scan_sequential(x, delta, A, B2, C, D2, initial_state)
     do = torch.randn_like(tri)
     tri.backward(do)
 
@@ -26,9 +29,10 @@ if __name__ == '__main__':
     tri_delta, delta.grad = delta.grad.clone(), None
     tri_A, A.grad = A.grad.clone(), None
 
-    ref = ref_selective_scan(x, delta, A, B2, C, D2)
+    ref, ref_final = ref_selective_scan(x, delta, A, B2, C, D2, initial_state)
 
     print((tri-ref).abs().max())
+    print((tri_final-ref_final).abs().max())
 
     ref.backward(do)
     ref_dc, C.grad = C.grad.clone(), None

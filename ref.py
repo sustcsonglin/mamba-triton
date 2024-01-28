@@ -3,7 +3,7 @@ from einops import einsum, rearrange, repeat
 
 
 # credit: https://github.com/johnma2006/mamba-minimal/blob/master/model.py#L275
-def ref_selective_scan(u, delta, A, B, C, D):
+def ref_selective_scan(u, delta, A, B, C, D, initial_state):
     """Does selective scan algorithm. See:
         - Section 2 State Space Models in the Mamba paper [1]
         - Algorithm 2 in Section 3.2 in the Mamba paper [1]
@@ -46,6 +46,7 @@ def ref_selective_scan(u, delta, A, B, C, D):
     # Note that the below is sequential, while the official implementation does a much faster parallel scan that
     # is additionally hardware-aware (like FlashAttention).
     x = torch.zeros((b, d_in, n), device=deltaA.device)
+    x += initial_state
     ys = []    
     for i in range(l):
         x = deltaA[:, i] * x + deltaB_u[:, i]
@@ -55,4 +56,4 @@ def ref_selective_scan(u, delta, A, B, C, D):
     
     y = y + u * D[None, None, :]
 
-    return y.to(original_dtype)
+    return y.to(original_dtype), x 
