@@ -5,7 +5,7 @@ from triton_scan import triton_selective_scan
 
 if __name__ == '__main__':
     B = 2
-    T = 64
+    T = 128
     D = 1024
     K = 16
     dtype = torch.float32

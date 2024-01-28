@@ -109,7 +109,7 @@ def backward_scan_du_delta_A(
     i_v = tl.program_id(1)
 
     dt_ptr = Dt + i_bh * T * D + i_v * T + T - tl.arange(0, T)
-    dt = tl.load(dt_ptr, mask=tl.arange(0, T) > 0, other=float("-inf")) 
+    dt = tl.load(dt_ptr, mask=tl.arange(0, T) > 0, other=0) 
 
     dt_ptr2 = Dt + i_bh * T * D + i_v * T + T - 1 - tl.arange(0, T)
     dt2 = tl.load(dt_ptr2)
@@ -137,6 +137,7 @@ def backward_scan_du_delta_A(
         c = tl.load(c_ptr).to(tl.float32)
         a = tl.load(A + i_v * K + i).to(tl.float32)
         dt_a = tl.math.exp(dt * a)
+        dt_a = tl.where(tl.arange(0, T) > 0, dt_a, 0)
         do_c = c * do
         tuples = pack64(do_c, dt_a)
         output_tuples_ = tl.associative_scan(tuples, axis=0, combine_fn=first_order_op)
