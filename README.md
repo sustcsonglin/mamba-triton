@@ -1,1 +1,3 @@
-- Strange bug with ```triton_scan.py```. Different behaviors for differnet input length.  Be really careful with ```tl.cumsum```, lots of bugs. 
+- Strange bug with ```triton_parallel_scan.py```. Different behaviors for differnet input length.  Be really careful with ```tl.cumsum```, lots of bugs. See issue [#1](https://github.com/openai/triton/issues/3017). 
+
+- ```triton_sequential_scan.py``` only uses for loop, but it is faster than ```triton_parallel_scan.py```. Only around 2.5 times slower than Tri's cuda implementation. Also support initial state.
